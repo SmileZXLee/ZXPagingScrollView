@@ -1,0 +1,7 @@
+platform :ios, '8.0'
+target 'ZXPagingScrollViewDemo' do
+pod 'ZXTableView'
+pod 'ZXCollectionView'
+pod 'ZXDataHandle'
+pod 'MJRefresh'
+end

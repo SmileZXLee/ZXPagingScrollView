@@ -1,0 +1,20 @@
+//
+//  PrefixHeader.pch
+//  ZXPagingScrollViewDemo
+//
+//  Created by 李兆祥 on 2019/10/25.
+//  Copyright © 2019 ZXLee. All rights reserved.
+//
+
+#ifndef PrefixHeader_pch
+#define PrefixHeader_pch
+
+#import "UIScrollView+ZXPaging.h"
+#import "ZXTableView.h"
+#import "ZXCollectionView.h"
+#import "ZXDataHandle.h"
+#import "MBProgressHUD.h"
+#import "HttpRequest.h"
+
+
+#endif /* PrefixHeader_pch */

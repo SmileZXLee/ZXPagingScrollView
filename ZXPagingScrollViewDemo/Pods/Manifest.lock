@@ -1,0 +1,28 @@
+PODS:
+  - MJRefresh (3.2.0)
+  - ZXCollectionView (1.0.4)
+  - ZXDataHandle (1.0.7)
+  - ZXTableView (1.0.9)
+
+DEPENDENCIES:
+  - MJRefresh
+  - ZXCollectionView
+  - ZXDataHandle
+  - ZXTableView
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - MJRefresh
+    - ZXCollectionView
+    - ZXDataHandle
+    - ZXTableView
+
+SPEC CHECKSUMS:
+  MJRefresh: ed450d6eb9d3346a2cb033ab7eb6de090aeef437
+  ZXCollectionView: c153ab2818f08ed2ab1849e0e6757e2bc55079ba
+  ZXDataHandle: eefdd627231452565c44bc87857ded67b46275d4
+  ZXTableView: c7c99dcbf4a3b303a4fa845cd4433a81750dffde
+
+PODFILE CHECKSUM: 7abf8f23df4b8f737f6d69f1076161e53396c086
+
+COCOAPODS: 1.6.1
