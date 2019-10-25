@@ -44,6 +44,8 @@ pod 'ZXPagingScrollView'
 }
 ```
 ### 至此，一个基础的分页效果已经完成
+### 查看效果
+<img src="https://img-blog.csdnimg.cn/20191025144212386.gif"/>
 
 ***
 
