@@ -11,12 +11,6 @@
 #define ZXPagingWeakSelf(obj) autoreleasepool{} __weak typeof(obj) o##Weak = obj;
 #define ZXPagingStrongSelf(obj) autoreleasepool{} __strong typeof(obj) obj = o##Weak;
 NS_ASSUME_NONNULL_BEGIN
-typedef NS_OPTIONS(NSUInteger, ZXMJFooterStyle) {
-    ///加载结束看不到MJFooter
-    ZXMJFooterStylePlain = 0,
-    ///加载结束可以看到MJFooter和对应的提示文字
-    ZXMJFooterStyleGroup
-};
 
 typedef NS_OPTIONS(NSUInteger, ZXDidUpdateScrollViewStatus) {
     ///加载结束刷新后还有更多数据
@@ -52,7 +46,7 @@ typedef void(^zx_mjFooterBlock) (void);
 @property(strong, nonatomic ,readonly)NSNumber *zx_pageCountNumber;
 
 /**
- MJFooter没有更多数据时显示的文字，ZXMJFooterStyle == ZXMJFooterStyleGroup时有效
+ MJFooter没有更多数据时显示的文字
  */
 @property(copy, nonatomic)NSString *zx_noMoreStr;
 
@@ -66,10 +60,6 @@ typedef void(^zx_mjFooterBlock) (void);
  */
 @property(strong, nonatomic, readonly)NSMutableArray *zx_lastPageDatas;
 
-/**
- MJFooter显示的样式
- */
-@property(assign, nonatomic)ZXMJFooterStyle zx_mjFooterStyle;
 
 /**
  是否是MJHeader触发的请求(一般用不到)
@@ -94,13 +84,13 @@ typedef void(^zx_mjFooterBlock) (void);
 @property(copy, nonatomic)void (^zx_didUpdateScrollViewStatusBlock)(ZXDidUpdateScrollViewStatus didUpdateScrollViewStatus);
 
 /**
- MJFooter为ZXMJFooterStyleGroup情况下，若当前页面为第一页，则自动隐藏MJFooter，非第一页显示MJFooter，默认为NO
+ MJFooter为MJRefreshAutoNormalFooter情况下，若当前页面为第一页，则自动隐藏MJFooter，非第一页显示MJFooter，默认为NO
  */
 @property(assign, nonatomic)BOOL zx_autoHideMJFooterInGroup;
 
 
 /**
- 添加默认的ZXPaging
+ 添加默认的ZXPaging(默认MJHeader为MJRefreshNormalHeader，MJFooter为MJRefreshBackNormalFooter)
 
  @param target 下拉刷新或上拉加载更多调用方法的target
  @param sel 下拉刷新或上拉加载更多调用方法的selector
@@ -109,31 +99,31 @@ typedef void(^zx_mjFooterBlock) (void);
 
 
 /**
- 添加默认的ZXPaging(target默认是当前控制器)
+ 添加默认的ZXPaging(target默认是当前控制器)(默认MJHeader为MJRefreshNormalHeader，MJFooter为MJRefreshBackNormalFooter)
 
  @param sel 下拉刷新或上拉加载更多调用方法的selector
  */
 - (void)zx_addDefaultPagingWithSel:(SEL)sel pagingDatas:(NSMutableArray *)pagingDatas;
 
 /**
- 添加自定义的ZXPaging(当自定义MJHeader或MJFooter时使用，请在这一行代码之前自定义MJHeader或MJFooter)
+ 添加自定义的ZXPaging(当自定义MJHeader或MJFooter时使用)
 
  @param target 下拉刷新或上拉加载更多调用方法的target
  @param sel 下拉刷新或上拉加载更多调用方法的selector
- @param isCustomHeader 是否自定义MJHeader
- @param isCustomFooter 是否自定义MJFooter
+ @param mjHeaderClass MJHeader的Class，传nil则为默认的MJRefreshNormalHeader
+ @param mjFooterClass MJFooter的Class，传nil则为默认的MJRefreshBackNormalFooter
  */
-- (void)zx_addCustomPagingWithReqTarget:(id)target sel:(SEL)sel isCustomHeader:(BOOL)isCustomHeader isCustomFooter:(BOOL)isCustomFooter pagingDatas:(NSMutableArray *)pagingDatas;
+- (void)zx_addCustomPagingWithReqTarget:(id)target sel:(SEL)sel customMJHeaderClass:(__nullable Class)mjHeaderClass customMJFooterClass:(__nullable Class)mjFooterClass pagingDatas:(NSMutableArray *)pagingDatas;
 
 
 /**
- 添加自定义的ZXPaging(当自定义MJHeader或MJFooter时使用，请在这一行代码之前自定义MJHeader或MJFooter)(target默认是当前控制器)
+ 添加自定义的ZXPaging(当自定义MJHeader或MJFooter时使用)(target默认是当前控制器)
 
  @param sel 下拉刷新或上拉加载更多调用方法的selector
- @param isCustomHeader 是否自定义MJHeader
- @param isCustomFooter 是否自定义MJFooter
+ @param mjHeaderClass MJHeader的Class，传nil则为默认的MJRefreshNormalHeader
+ @param mjFooterClass MJFooter的Class，传nil则为默认的MJRefreshBackNormalFooter
  */
-- (void)zx_addCustomPagingWithSel:(SEL)sel isCustomHeader:(BOOL)isCustomHeader isCustomFooter:(BOOL)isCustomFooter pagingDatas:(NSMutableArray *)pagingDatas;
+- (void)zx_addCustomPagingWithSel:(SEL)sel customMJHeaderClass:(__nullable Class)mjHeaderClass customMJFooterClass:(__nullable Class)mjFooterClass pagingDatas:(NSMutableArray *)pagingDatas;
 
 
 /**
@@ -146,7 +136,7 @@ typedef void(^zx_mjFooterBlock) (void);
 
 
 /**
- 结束MJHeaderView和MJFooter的刷新状态，且自动reloadData(一般用不到，需要的时候可以调用)
+ 结束MJHeaderView和MJFooter的刷新状态，且自动reloadData(一般用不到，zx_requestResult方法内部会自动调用，若其他地方需要使用可以调用)
  */
 - (void)zx_endMJRef;
 @end

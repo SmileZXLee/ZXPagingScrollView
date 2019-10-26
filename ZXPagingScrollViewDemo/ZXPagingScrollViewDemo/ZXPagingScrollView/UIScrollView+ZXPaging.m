@@ -15,7 +15,6 @@ static NSString *zx_pageCountKey = @"zx_pageCountKey";
 static NSString *zx_noMoreStrKey = @"zx_noMoreStrKey";
 static NSString *zx_pageDatasKey = @"zx_pageDatasKey";
 static NSString *zx_lastPageDatasKey = @"zx_lastPageDatasKey";
-static NSString *zx_mjFooterStyleKey = @"zx_mjFooterStyleKey";
 static NSString *zx_isMJHeaderRefKey = @"zx_isMJHeaderRefKey";
 static NSString *zx_mjHeaderRefreshingBlockKey = @"zx_mjHeaderRefreshingBlockKey";
 static NSString *zx_mjFooterRefreshingBlockKey = @"zx_mjFooterRefreshingBlockKey";
@@ -45,56 +44,36 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
 }
 
 #pragma mark 添加自定义的ZXPaging
-- (void)zx_addCustomPagingWithReqTarget:(id)target sel:(SEL)sel isCustomHeader:(BOOL)isCustomHeader isCustomFooter:(BOOL)isCustomFooter pagingDatas:(NSMutableArray *)pagingDatas{
-    [self zx_performSelWithTarget:target sel:sel];
+- (void)zx_addCustomPagingWithReqTarget:(id)target sel:(SEL)sel customMJHeaderClass:(__nullable Class)mjHeaderClass customMJFooterClass:(__nullable Class)mjFooterClass pagingDatas:(NSMutableArray *)pagingDatas{
     self.zx_pageDatas = pagingDatas;
+    [self zx_performSelWithTarget:target sel:sel];
     __weak typeof(target)weakTarget = target;
     __weak typeof(self)weakSelf = self;
-    if(isCustomHeader){
-        if(self.mj_header){
-            self.mj_header.refreshingBlock = ^{
-                [weakSelf zx_handleMjHeaderRefresh];
-                if([weakTarget respondsToSelector:sel]){
-                    [weakTarget performSelector:sel withObject:nil afterDelay:0];
-                }
-            };
-        }else{
-            NSAssert(self.mj_header, @"请先初始化MJHeader");
-        }
-    }else{
+    
+    if(!mjHeaderClass){
         [self addDefaultMJHeader:^{
-            if([weakTarget respondsToSelector:sel]){
-                [weakTarget performSelector:sel withObject:nil afterDelay:0];
-            }
+            [weakSelf zx_performSelWithTarget:weakTarget sel:sel];
         }];
-    }
-    
-    if(isCustomFooter){
-        if(self.mj_footer){
-            self.mj_footer.refreshingBlock = ^{
-                [weakSelf zx_handleMjHeaderRefresh];
-                if([weakTarget respondsToSelector:sel]){
-                    [weakTarget performSelector:sel withObject:nil afterDelay:0];
-                }
-            };
-        }else{
-            NSAssert(self.mj_footer, @"请先初始化MJFooter");
-        }
     }else{
-        [self addDefaultMJFooter:^{
-            if([weakTarget respondsToSelector:sel]){
-                [weakTarget performSelector:sel withObject:nil afterDelay:0];
-            }
+        [self addCustomMJHeader:mjHeaderClass callBack:^{
+            [weakSelf zx_performSelWithTarget:weakTarget sel:sel];
         }];
     }
-    
+    if(!mjFooterClass){
+        [self addDefaultMJFooter:^{
+            [weakSelf zx_performSelWithTarget:weakTarget sel:sel];
+        }];
+    }else{
+        [self addCustomMJFooter:mjFooterClass callBack:^{
+            [weakSelf zx_performSelWithTarget:weakTarget sel:sel];
+        }];
+    }
     self.mj_footer.hidden = YES;
 }
 
 #pragma mark 添加自定义的ZXPaging
-- (void)zx_addCustomPagingWithSel:(SEL)sel isCustomHeader:(BOOL)isCustomHeader isCustomFooter:(BOOL)isCustomFooter pagingDatas:(NSMutableArray *)pagingDatas{
-    self.zx_pageDatas = pagingDatas;
-    [self zx_addCustomPagingWithReqTarget:[self zx_pagingGetCurrentVc] sel:sel isCustomHeader:isCustomHeader isCustomFooter:isCustomFooter pagingDatas:pagingDatas];
+- (void)zx_addCustomPagingWithSel:(SEL)sel customMJHeaderClass:(__nullable Class)mjHeaderClass customMJFooterClass:(__nullable Class)mjFooterClass pagingDatas:(NSMutableArray *)pagingDatas{
+    [self zx_addCustomPagingWithReqTarget:[self zx_pagingGetCurrentVc] sel:sel customMJHeaderClass:mjHeaderClass customMJFooterClass:mjFooterClass pagingDatas:pagingDatas];
 }
 
 #pragma mark 结束MJHeaderView和MJFooter的刷新状态，且自动reloadData
@@ -123,16 +102,26 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
 
 #pragma mark - Private
 #pragma mark 设置MJFooter
-- (void)setMJFooterStyle:(ZXMJFooterStyle)style noMoreStr:(NSString *)noMoreStr{
-    self.zx_mjFooterStyle = style;
-    self.zx_noMoreStr = noMoreStr;
-}
 
 #pragma mark 添加默认的MJHeader
 - (void)addDefaultMJHeader:(zx_mjHeaderBlock)block{
     __weak typeof(self)weakSelf = self;
     MJRefreshNormalHeader *header = [MJRefreshNormalHeader headerWithRefreshingBlock:^{
-        [weakSelf zx_handleMjHeaderRefresh];
+        [weakSelf zx_handleMJHeaderRefresh];
+        block();
+    }];
+    self.mj_header = header;
+}
+
+#pragma mark 添加自定义的MJHeader
+- (void)addCustomMJHeader:(Class)headerClass callBack:(zx_mjHeaderBlock)block{
+    __weak typeof(self)weakSelf = self;
+    if(![headerClass respondsToSelector:@selector(headerWithRefreshingBlock:)]){
+        NSAssert(NO, @"MJHeader的class错误，请检查customMJHeaderClass！");
+        return;
+    }
+    MJRefreshHeader *header = [headerClass headerWithRefreshingBlock:^{
+        [weakSelf zx_handleMJHeaderRefresh];
         block();
     }];
     self.mj_header = header;
@@ -140,35 +129,36 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
 
 #pragma mark 添加默认的MJFooter
 - (void)addDefaultMJFooter:(zx_mjFooterBlock)block{
-    [self addDefaultMJFooterStyle:self.zx_mjFooterStyle noMoreStr:self.zx_noMoreStr block:block];
-}
-
-#pragma mark 添加默认的MJFooter
-- (void)addDefaultMJFooterStyle:(ZXMJFooterStyle)style noMoreStr:(NSString *)noMoreStr block:(zx_mjFooterBlock)block{
     __weak typeof(self)weakSelf = self;
-    if(style == ZXMJFooterStylePlain){
-        self.mj_footer = [MJRefreshBackNormalFooter footerWithRefreshingBlock:^{
-            [weakSelf zx_handleMjFooterRefresh];
-            block();
-        }];
+    MJRefreshBackNormalFooter *footer = [MJRefreshBackNormalFooter footerWithRefreshingBlock:^{
+        [weakSelf zx_handleMjFooterRefresh];
+        block();
+    }];
+    if(self.zx_noMoreStr.length){
         MJRefreshBackNormalFooter *foot = (MJRefreshBackNormalFooter *)self.mj_footer;
-        [foot setTitle:noMoreStr forState:MJRefreshStateNoMoreData];
-    }else{
-        self.mj_footer = [MJRefreshAutoNormalFooter footerWithRefreshingBlock:^{
-            [weakSelf zx_handleMjFooterRefresh];
-            block();
-        }];
-        if(self.zx_noMoreStr.length){
-            MJRefreshAutoNormalFooter *foot = (MJRefreshAutoNormalFooter *)self.mj_footer;
-            if([foot respondsToSelector:@selector(setTitle: forState:)]){
-                [foot setTitle:noMoreStr forState:MJRefreshStateNoMoreData];
-            }
+        if([foot respondsToSelector:@selector(setTitle:forState:)]){
+            [foot setTitle:self.zx_noMoreStr forState:MJRefreshStateNoMoreData];
         }
     }
+    self.mj_footer = footer;
+}
+
+#pragma mark 添加自定义的MJFooter
+- (void)addCustomMJFooter:(Class)footerClass callBack:(zx_mjHeaderBlock)block{
+    __weak typeof(self)weakSelf = self;
+    if(![footerClass respondsToSelector:@selector(footerWithRefreshingBlock:)]){
+        NSAssert(NO, @"MJFooter的class错误，请检查customMJFooterClass！");
+        return;
+    }
+    MJRefreshFooter *footer = [footerClass footerWithRefreshingBlock:^{
+        [weakSelf zx_handleMjFooterRefresh];
+        block();
+    }];
+    self.mj_footer = footer;
 }
 
 #pragma mark MJHeader刷新后的处理
-- (void)zx_handleMjHeaderRefresh{
+- (void)zx_handleMJHeaderRefresh{
     [self setValue:@1 forKey:@"zx_isMJHeaderRef"];
     if(self.zx_pageDatas.count % self.zx_pageCount){
         self.mj_footer.state = MJRefreshStateNoMoreData;
@@ -194,6 +184,10 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
 -(void)updateScrollViewStatus:(BOOL)status{
     [self zx_endMJRef];
     self.mj_header.hidden = NO;
+    if([self.mj_footer
+        respondsToSelector:@selector(arrowView)]){
+        [self.mj_footer setValue:@1 forKeyPath:@"arrowView.alpha"];
+    }
     ZXDidUpdateScrollViewStatus didUpdateScrollViewStatus = ZXDidUpdateScrollViewStatusHasMoreData;
     if(status){
         if(!self.zx_pageDatas.count){
@@ -204,8 +198,10 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
             if(self.zx_pageDatas.count % self.zx_pageCount || (self.zx_lastPageDatas && self.zx_lastPageDatas.count == self.zx_pageDatas.count  && self.zx_lastPageDatas.count != self.zx_pageCount)){
                 [self judgeHideMjFooterView];
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    if(self.zx_mjFooterStyle == ZXMJFooterStyleGroup){
-                        self.mj_footer.state = MJRefreshStateNoMoreData;
+                    self.mj_footer.state = MJRefreshStateNoMoreData;
+                    if([self.mj_footer
+                        respondsToSelector:@selector(arrowView)]){
+                        [self.mj_footer setValue:@0 forKeyPath:@"arrowView.alpha"];
                     }
                 });
                 didUpdateScrollViewStatus = ZXDidUpdateScrollViewStatusNoMoreData;
@@ -286,6 +282,12 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
 }
 
 - (void)setZx_noMoreStr:(NSString *)zx_noMoreStr{
+    if(zx_noMoreStr.length && self.mj_footer){
+        MJRefreshBackStateFooter *footer = (MJRefreshBackStateFooter *)self.mj_footer;
+        if([footer respondsToSelector:@selector(setTitle:forState:)]){
+            [footer setTitle:zx_noMoreStr forState:MJRefreshStateNoMoreData];
+        }
+    }
     objc_setAssociatedObject(self, &zx_noMoreStrKey, zx_noMoreStr, OBJC_ASSOCIATION_COPY_NONATOMIC);
 }
 
@@ -307,14 +309,6 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
 
 - (NSMutableArray *)zx_lastPageDatas{
     return objc_getAssociatedObject(self, &zx_lastPageDatasKey);
-}
-
-- (void)setZx_mjFooterStyle:(ZXMJFooterStyle)zx_mjFooterStyle{
-    objc_setAssociatedObject(self, &zx_mjFooterStyleKey, [NSNumber numberWithInt:zx_mjFooterStyle], OBJC_ASSOCIATION_ASSIGN);
-}
-
-- (ZXMJFooterStyle)zx_mjFooterStyle{
-    return [objc_getAssociatedObject(self, &zx_mjFooterStyleKey) intValue];
 }
 
 - (void)setZx_isMJHeaderRef:(BOOL)zx_isMJHeaderRef{
