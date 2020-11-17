@@ -17,6 +17,7 @@ pod 'ZXPagingScrollView'
 ```
 ## 基础使用(tableView与collectionView相同，此处以tableView为例)
 ### 在控制器viewDidLoad中初始化ZXPaging，设置分页下拉刷新与上拉加载更多的回调函数，并设置分页的数据源(也就是tableView的数据源数组)
+* 添加默认的ZXPaging(target默认是当前控制器)(默认MJHeader为MJRefreshNormalHeader，MJFooter为MJRefreshBackNormalFooter【加载结束看不到MJFooter】)
 ```objective-c
 [self.tableView zx_addDefaultPagingWithSel:@selector(requestTableViewData) pagingDatas:self.datasAttar];
 ```
@@ -63,38 +64,24 @@ self.tableView.zx_pageNo = 1;
 //设置pageCount为20
 self.tableView.zx_pageCount = 20;
 ```
-### 更改MJFooter的显示样式(默认为ZXMJFooterStylePlain)
-* ZXMJFooterStylePlain(加载结束看不到MJFooter)    
-* ZXMJFooterStyleGroup(加载结束可以看到MJFooter和对应的提示文字)
-```objective-c
-//将MJFooter的样式改成ZXMJFooterStyleGroup
-self.tableView.zx_mjFooterStyle = ZXMJFooterStyleGroup;
-```
-### 更改MJFooter没有更多数据时显示的文字内容(self.tableView.zx_mjFooterStyle == ZXMJFooterStyleGroup时生效)
+### 更改MJFooter没有更多数据时显示的文字内容
 ```objective-c
 self.tableView.zx_noMoreStr = @"亲，没有更多数据啦~";
 ```
 ### 更改MJHeader或MJFooter样式
-* MJHeader默认为MJRefreshNormalHeader，MJFooter默认为MJRefreshBackNormalFooter[self.tableView.zx_mjFooterStyle == ZXMJFooterStylePlain]或MJRefreshAutoNormalFooter[self.tableView.zx_mjFooterStyle == ZXMJFooterStyleGroup]
-* 若需要的样式在上述范围内，则可以直接更改self.tableView.mj_header...来更改对应样式 
-* 请在zx_addDefaultPaging之后设置(因为zx_addDefaultPaging会自动添加self.tableView.mj_header)
+* MJHeader默认为MJRefreshNormalHeader，MJFooter默认为MJRefreshBackNormalFooter(加载结束看不到MJFooter)
+* 若需要的样式在上述范围内，则可以直接更改self.tableView.mj_header...来更改对应样式
+* 请在zx_addDefaultPaging之后设置(因为zx_addDefaultPaging会自动添加self.tableView.mj_header)，如
 ```objective-c
 //隐藏上次加载时间
 ((MJRefreshNormalHeader *)self.tableView.mj_header).lastUpdatedTimeLabel.hidden = YES;
 ```
-* 若您需要设置的样式不在默认自动设置的样式之中，则需要自行处理MJHeader或MJFooter的样式
-* 例如，要实现一个gif效果的MJHeader（代码摘抄至MJRefresh README.md）
-```objective-c
-//初始化MJHeader
-MJRefreshGifHeader *header = [MJRefreshGifHeader headerWithRefreshingTarget:self refreshingAction:@selector(loadNewData)];
+* 若您需要设置的样式不在默认的样式之中，则需要使用zx_addCustomPagingWithSel进行分页的初始化设置
+* 例如，要实现一个gif效果的MJHeader
 [header setImages:idleImages forState:MJRefreshStateIdle];
-[header setImages:pullingImages forState:MJRefreshStatePulling];
-[header setImages:refreshingImages forState:MJRefreshStateRefreshing];
-self.tableView.mj_header = header;
-```
-* 使用[self.tableView zx_addDefaultPagingWithSel...]代替原来的[self.tableView zx_addDefaultPagingWithSel...]初始化方法，并告知headerView还是footerView是自定义的
+* 使用[self.tableView zx_addCustomPagingWithSel...]代替原来的[self.tableView zx_addDefaultPagingWithSel...]初始化方法，并设置需要自定义的MJHeader或MJFooter的类(传nil则为默认的)
 ```objective-c
-[self.tableView zx_addCustomPagingWithSel:@selector(requestTableViewData) isCustomHeader:YES isCustomFooter:NO pagingDatas:self.datasAttar];
+[self.tableView zx_addCustomPagingWithSel:@selector(requestTableViewData) customMJHeaderClass:[MJRefreshGifHeader class] customMJFooterClass:nil pagingDatas:self.datasAttar];
 ```
 ### MJHeader或MJFooter刷新的回调
 * ZXPaging会自动实现二者的刷新回调并进行对应的分页逻辑处理
@@ -118,8 +105,8 @@ self.tableView.zx_didUpdateScrollViewStatusBlock = ^(ZXDidUpdateScrollViewStatus
     }
 };
 ```
-
-
-
-
-
+### MJFooter为MJRefreshAutoNormalFooter情况下，若当前页面为第一页，则自动隐藏MJFooter，非第一页显示MJFooter，默认为NO
+```objective-c
+//第一页的时候自动隐藏MJFooter(MJRefreshAutoNormalFooter情况下生效)
+self.tableView.zx_autoHideMJFooterInGroup = YES;
+```
