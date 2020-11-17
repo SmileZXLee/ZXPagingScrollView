@@ -36,7 +36,12 @@ typedef void(^zx_mjFooterBlock) (void);
 @property(strong, nonatomic ,readonly)NSNumber *zx_pageNoNumber;
 
 /**
- 分页的Count(每页显示多少条数据)(默认为10)
+ 设置默认分页的No(从第几页开始)(默认为0)(仅需设置一次，可以在项目加载时通过[UIScrollView new].zx_defaultPageNo设置)
+ */
+@property(assign, nonatomic)NSUInteger zx_defaultPageNo;
+
+/**
+ 分页的Count(每页显示多少条数据)(默认为10)(仅需设置一次)
  */
 @property(assign, nonatomic)NSUInteger zx_pageCount;
 
@@ -46,9 +51,19 @@ typedef void(^zx_mjFooterBlock) (void);
 @property(strong, nonatomic ,readonly)NSNumber *zx_pageCountNumber;
 
 /**
+ 设置默认分页的Count(每页显示多少条数据)(默认为10)(仅需设置一次，可以在项目加载时通过[UIScrollView new].zx_defaultPageCount设置)
+ */
+@property(assign, nonatomic)NSUInteger zx_defaultPageCount;
+
+/**
  MJFooter没有更多数据时显示的文字
  */
 @property(copy, nonatomic)NSString *zx_noMoreStr;
+
+/**
+ MJFooter没有更多数据时显示的默认文字(仅需设置一次，可以在项目加载时通过[UIScrollView new].zx_defaultNoMoreStr设置)
+ */
+@property(copy, nonatomic, nullable)NSString *zx_defaultNoMoreStr;
 
 /**
  分页请求的数据源数组，不要使用数组的copy方法给它赋值，以便ZXPaging自动修改原数据源数组
@@ -56,9 +71,9 @@ typedef void(^zx_mjFooterBlock) (void);
 @property(strong, nonatomic)NSMutableArray *zx_pageDatas;
 
 /**
- 上一次加载的数据(一般用不到)
+ addPaing时，禁止同时调用数据请求函数
  */
-@property(strong, nonatomic, readonly)NSMutableArray *zx_lastPageDatas;
+@property(assign, nonatomic)BOOL zx_disbaleAutoCallWhenAddingPaging;
 
 
 /**
@@ -139,6 +154,11 @@ typedef void(^zx_mjFooterBlock) (void);
  结束MJHeaderView和MJFooter的刷新状态，且自动reloadData(一般用不到，zx_requestResult方法内部会自动调用，若其他地方需要使用可以调用)
  */
 - (void)zx_endMJRef;
+
+/**
+ 刷新paging(等同于下拉刷新)
+ */
+- (void)zx_reloadPaging;
 @end
 
 NS_ASSUME_NONNULL_END

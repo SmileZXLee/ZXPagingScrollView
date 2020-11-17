@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import "UIScrollView+ZXPaging.h"
 #import "DemoListVC.h"
 @interface AppDelegate ()
 

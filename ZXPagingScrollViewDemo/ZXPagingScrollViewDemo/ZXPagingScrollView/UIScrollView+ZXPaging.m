@@ -10,22 +10,41 @@
 #import <objc/runtime.h>
 static int defaultPageNo = -1;
 static int defaultPageCount = -1;
+static NSString *defaultNoMoreStr = nil;
 static NSString *zx_pageNoKey = @"zx_pageNoKey";
 static NSString *zx_pageCountKey = @"zx_pageCountKey";
 static NSString *zx_noMoreStrKey = @"zx_noMoreStrKey";
+static NSString *zx_disbaleAutoCallWhenAddingPagingKey = @"zx_disbaleAutoCallWhenAddingPagingKey";
 static NSString *zx_pageDatasKey = @"zx_pageDatasKey";
 static NSString *zx_lastPageDatasKey = @"zx_lastPageDatasKey";
+static NSString *zx_lastPageNoKey = @"zx_lastPageNoKey";
 static NSString *zx_isMJHeaderRefKey = @"zx_isMJHeaderRefKey";
 static NSString *zx_mjHeaderRefreshingBlockKey = @"zx_mjHeaderRefreshingBlockKey";
 static NSString *zx_mjFooterRefreshingBlockKey = @"zx_mjFooterRefreshingBlockKey";
 static NSString *zx_didUpdateScrollViewStatusBlockKey = @"zx_didUpdateScrollViewStatusBlockKey";
 static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey";
+@interface UIScrollView (ZXPaging)
+/**
+ 上一次加载的数据
+ */
+@property(strong, nonatomic)NSMutableArray *zx_lastPageDatas;
+/**
+ 上一次的pageNo
+ */
+@property(assign, nonatomic)NSUInteger zx_lastPageNo;
+
+@end
 @implementation UIScrollView (ZXPaging)
 #pragma mark - Public
 #pragma mark 添加默认的ZXPaging
 - (void)zx_addDefaultPagingWithReqTarget:(id)target sel:(SEL)sel pagingDatas:(NSMutableArray *)pagingDatas{
+    if(defaultNoMoreStr){
+        self.zx_noMoreStr = defaultNoMoreStr;
+    }
     self.zx_pageDatas = pagingDatas;
-    [self zx_performSelWithTarget:target sel:sel];
+    if(!self.zx_disbaleAutoCallWhenAddingPaging){
+        [self zx_performSelWithTarget:target sel:sel];
+    }
     __weak typeof(target)weakTarget = target;
     __weak typeof(self)weakSelf = self;
     [self addDefaultMJHeader:^{
@@ -46,7 +65,9 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
 #pragma mark 添加自定义的ZXPaging
 - (void)zx_addCustomPagingWithReqTarget:(id)target sel:(SEL)sel customMJHeaderClass:(__nullable Class)mjHeaderClass customMJFooterClass:(__nullable Class)mjFooterClass pagingDatas:(NSMutableArray *)pagingDatas{
     self.zx_pageDatas = pagingDatas;
-    [self zx_performSelWithTarget:target sel:sel];
+    if(!self.zx_disbaleAutoCallWhenAddingPaging){
+        [self zx_performSelWithTarget:target sel:sel];
+    }
     __weak typeof(target)weakTarget = target;
     __weak typeof(self)weakSelf = self;
     
@@ -85,16 +106,35 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
     [self.mj_footer endRefreshing];
 }
 
+#pragma mark 刷新paging(等同于下拉刷新)
+- (void)zx_reloadPaging{
+    if(self.mj_header && self.mj_header.refreshingBlock){
+        self.mj_header.refreshingBlock();
+    }
+}
+
 #pragma mark 请求完成调用此方法
 - (void)zx_requestResult:(BOOL)success resultArray:(NSArray *)resultArray{
-    if(self.zx_pageNo == [self getFinalPageNo]){
-        [self.zx_pageDatas removeAllObjects];
-    }
     if(!self.zx_pageDatas){
         self.zx_pageDatas = [NSMutableArray array];
     }
-    if(success){
-        [self.zx_pageDatas addObjectsFromArray:resultArray];
+    if(self.zx_pageNo == [self getFinalPageNo]){
+        [self.zx_pageDatas removeAllObjects];
+        if(success){
+            [self.zx_pageDatas addObjectsFromArray:resultArray];
+        }
+    }else{
+        if(self.zx_pageNo == self.zx_lastPageNo){
+            if(success){
+                [self.zx_pageDatas replaceObjectsInRange:NSMakeRange(self.zx_pageNo - (defaultPageNo == -1 ? 0 : defaultPageNo), resultArray.count) withObjectsFromArray:resultArray];
+            }
+        }else{
+            self.zx_lastPageNo = self.zx_pageNo;
+            if(success){
+                [self.zx_pageDatas addObjectsFromArray:resultArray];
+            }
+            
+        }
     }
     [self updateScrollViewStatus:success];
     [self zx_endMJRef];
@@ -135,7 +175,7 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
         block();
     }];
     if(self.zx_noMoreStr.length){
-        MJRefreshBackNormalFooter *foot = (MJRefreshBackNormalFooter *)self.mj_footer;
+        MJRefreshBackNormalFooter *foot = (MJRefreshBackNormalFooter *)footer;
         if([foot respondsToSelector:@selector(setTitle:forState:)]){
             [foot setTitle:self.zx_noMoreStr forState:MJRefreshStateNoMoreData];
         }
@@ -165,6 +205,7 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
     }
     [self.zx_pageDatas removeAllObjects];
     self.zx_pageNo = [self getFinalPageNo];
+    self.zx_lastPageNo = self.zx_pageNo;
     if(self.zx_mjHeaderRefreshingBlock){
         self.zx_mjHeaderRefreshingBlock();
     }
@@ -197,6 +238,7 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
             self.mj_footer.hidden = NO;
             if(self.zx_pageDatas.count % self.zx_pageCount || (self.zx_lastPageDatas && self.zx_lastPageDatas.count == self.zx_pageDatas.count  && self.zx_lastPageDatas.count != self.zx_pageCount)){
                 [self judgeHideMjFooterView];
+                NSLog(@"self.zx_lastPageDatas--%@",self.zx_lastPageDatas);
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     self.mj_footer.state = MJRefreshStateNoMoreData;
                     if([self.mj_footer
@@ -209,7 +251,7 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
                 [self judgeHideMjFooterView];
             }
         }
-        if(!self.zx_isMJHeaderRef){
+        if(!self.zx_isMJHeaderRef && !(self.zx_pageNo == self.zx_lastPageNo)){
             [self setValue:[self.zx_pageDatas mutableCopy] forKey:@"zx_lastPageDatas"];
         }
     }else{
@@ -218,6 +260,7 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
         }
         if(self.zx_pageNo > [self getFinalPageNo]){
             self.zx_pageNo--;
+            self.zx_lastPageNo--;
             [self.zx_lastPageDatas removeAllObjects];
         }
         didUpdateScrollViewStatus = ZXDidUpdateScrollViewStatusFailed;
@@ -271,6 +314,14 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
     return !pageNoValue ? (defaultPageNo != -1 ? defaultPageNo : 0) : pageNo;
 }
 
+- (void)setZx_defaultPageNo:(NSUInteger)zx_defaultPageNo{
+    defaultPageNo = (int)zx_defaultPageNo;
+}
+
+- (NSUInteger)zx_defaultPageNo{
+    return defaultPageNo;
+}
+
 - (void)setZx_pageCount:(NSUInteger)zx_pageCount{
     objc_setAssociatedObject(self, &zx_pageCountKey, [NSNumber numberWithUnsignedInteger:zx_pageCount], OBJC_ASSOCIATION_ASSIGN);
 }
@@ -279,6 +330,14 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
     id pageCountValue = objc_getAssociatedObject(self, &zx_pageCountKey);
     NSUInteger pageCount = [pageCountValue unsignedIntegerValue];
     return !pageCountValue ? (defaultPageCount != -1 ? defaultPageCount : 10) : pageCount;
+}
+
+- (void)setZx_defaultPageCount:(NSUInteger)zx_defaultPageCount{
+    defaultPageCount = (int)zx_defaultPageCount;
+}
+
+- (NSUInteger)zx_defaultPageCount{
+    return defaultPageCount;
 }
 
 - (void)setZx_noMoreStr:(NSString *)zx_noMoreStr{
@@ -294,6 +353,32 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
 - (NSString *)zx_noMoreStr{
     return objc_getAssociatedObject(self, &zx_noMoreStrKey);
 }
+
+- (void)setZx_defaultNoMoreStr:(NSString *)zx_defaultNoMoreStr{
+    defaultNoMoreStr = zx_defaultNoMoreStr;
+}
+
+- (NSString *)zx_defaultNoMoreStr{
+    return defaultNoMoreStr;
+}
+
+- (void)setZx_lastPageNo:(NSUInteger)zx_lastPageNo{
+    objc_setAssociatedObject(self, &zx_lastPageNoKey, [NSNumber numberWithUnsignedInteger:zx_lastPageNo], OBJC_ASSOCIATION_ASSIGN);
+}
+- (NSUInteger)zx_lastPageNo{
+    id pageNoValue = objc_getAssociatedObject(self, &zx_lastPageNoKey);
+    NSUInteger pageNo = [pageNoValue unsignedIntegerValue];
+    return !pageNoValue ? (defaultPageNo != -1 ? defaultPageNo : 0) : pageNo;
+}
+
+- (void)setZx_disbaleAutoCallWhenAddingPaging:(BOOL)disbaleAutoCallWhenAddingPaging{
+    objc_setAssociatedObject(self, &zx_disbaleAutoCallWhenAddingPagingKey, [NSNumber numberWithBool:disbaleAutoCallWhenAddingPaging], OBJC_ASSOCIATION_ASSIGN);
+}
+- (BOOL)zx_disbaleAutoCallWhenAddingPaging{
+    id disbaleAutoCallWhenAddingPaging = objc_getAssociatedObject(self, &zx_disbaleAutoCallWhenAddingPagingKey);
+    return disbaleAutoCallWhenAddingPaging;
+}
+
 
 - (void)setZx_pageDatas:(NSMutableArray *)zx_pageDatas{
     objc_setAssociatedObject(self, &zx_pageDatasKey, zx_pageDatas, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
