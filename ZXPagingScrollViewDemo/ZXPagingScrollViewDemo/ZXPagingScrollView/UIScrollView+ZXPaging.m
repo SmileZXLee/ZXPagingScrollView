@@ -126,7 +126,11 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
     }else{
         if(self.zx_pageNo == self.zx_lastPageNo){
             if(success){
-                [self.zx_pageDatas replaceObjectsInRange:NSMakeRange(self.zx_pageNo - (defaultPageNo == -1 ? 0 : defaultPageNo), resultArray.count) withObjectsFromArray:resultArray];
+                long loc = self.zx_pageNo - (defaultPageNo == -1 ? 0 : defaultPageNo);
+                long count = resultArray.count;
+                if(self.zx_pageDatas.count && loc + count <= self.zx_pageDatas.count){
+                    [self.zx_pageDatas replaceObjectsInRange:NSMakeRange(self.zx_pageNo - (defaultPageNo == -1 ? 0 : defaultPageNo), resultArray.count) withObjectsFromArray:resultArray];
+                }
             }
         }else{
             self.zx_lastPageNo = self.zx_pageNo;

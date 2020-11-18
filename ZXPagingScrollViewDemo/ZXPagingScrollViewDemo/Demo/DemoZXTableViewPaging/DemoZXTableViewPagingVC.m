@@ -54,10 +54,6 @@
 - (void)setupPaging{
     //1.为self.tableView添加分页效果，此方法会自动调用[self requestTableViewData]
     [self.tableView zx_addDefaultPagingWithSel:@selector(requestTableViewData) pagingDatas:self.tableView.zxDatas];
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        //[self.tableView.mj_header beginRefreshing];
-        [self.tableView zx_reloadPaging];
-    });
 }
 
 #pragma mark 网络请求
@@ -70,7 +66,6 @@
         //字典转模型
         NSArray *backModelDatas = [TestModel zx_modelWithObj:backData];
         //2.刷新ZXPaging分页请求结果
-        [self.tableView zx_requestResult:result resultArray:backModelDatas];
         [self.tableView zx_requestResult:result resultArray:backModelDatas];
         if(result){
             //请求成功

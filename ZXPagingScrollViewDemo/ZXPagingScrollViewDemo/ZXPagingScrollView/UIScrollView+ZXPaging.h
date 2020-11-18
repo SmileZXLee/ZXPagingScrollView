@@ -28,12 +28,12 @@ typedef void(^zx_mjFooterBlock) (void);
 /**
  分页的No(从第几页开始)(默认为0)
  */
-@property(assign, nonatomic)NSUInteger zx_pageNo;
+@property(assign, nonatomic, readonly)NSUInteger zx_pageNo;
 
 /**
  分页的No(从第几页开始)(默认为0)[Number类型，方便直接放到请求的字典中]
  */
-@property(strong, nonatomic ,readonly)NSNumber *zx_pageNoNumber;
+@property(strong, nonatomic, readonly)NSNumber *zx_pageNoNumber;
 
 /**
  设置默认分页的No(从第几页开始)(默认为0)(仅需设置一次，可以在项目加载时通过[UIScrollView new].zx_defaultPageNo设置)
@@ -43,12 +43,12 @@ typedef void(^zx_mjFooterBlock) (void);
 /**
  分页的Count(每页显示多少条数据)(默认为10)(仅需设置一次)
  */
-@property(assign, nonatomic)NSUInteger zx_pageCount;
+@property(assign, nonatomic, readonly)NSUInteger zx_pageCount;
 
 /**
  分页的Count(每页显示多少条数据)(默认为10)[Number类型，方便直接放到请求的字典中]
  */
-@property(strong, nonatomic ,readonly)NSNumber *zx_pageCountNumber;
+@property(strong, nonatomic, readonly)NSNumber *zx_pageCountNumber;
 
 /**
  设置默认分页的Count(每页显示多少条数据)(默认为10)(仅需设置一次，可以在项目加载时通过[UIScrollView new].zx_defaultPageCount设置)
