@@ -52,19 +52,35 @@ pod 'ZXPagingScrollView'
 
 ## 使用进阶
 ### 注：以下配置可以统一写在Base控制器中，不需要每个控制器都更改
-### 更改默认的PageNo
+### 全局更改默认的PageNo
+* pageNo默认从0开始，若要更改初始的pageNo(仅需设置一次，可以在项目加载时通过[UIScrollView new].zx_defaultPageNo设置)
+```objective-c
+//设置全局pageNo从1开始
+[UIScrollView new].zx_defaultPageNo = 1;
+```
+### 当前页面更改默认的PageNo
 * pageNo默认从0开始，若要更改初始的pageNo，请在zx_addDefaultPaging之前设置
 ```objective-c
-//设置pageNo从1开始
-self.tableView.zx_pageNo = 1;
+//设置当前页面pageCount为20
+self.tableView.zx_defaultPageNo = 1;
 ```
-### 更改默认的PageCount
+### 全局更改默认的PageCount
+* pageCount默认为10，若要更改初始的pageCount(仅需设置一次，可以在项目加载时通过[UIScrollView new].zx_defaultPageCount设置)
+```objective-c
+//设置全局pageCount为20
+[UIScrollView new].zx_defaultPageCount = 20;
+```
+### 当前页面更改默认的PageCount
 * pageCount默认为10，若要更改初始的pageCount，请在zx_addDefaultPaging之前设置
 ```objective-c
-//设置pageCount为20
-self.tableView.zx_pageCount = 20;
+//设置当前页面pageCount为20
+self.tableView.zx_defaultPageCount = 20;
 ```
-### 更改MJFooter没有更多数据时显示的文字内容
+### 全局更改MJFooter没有更多数据时显示的文字内容
+```objective-c
+[UIScrollView new].zx_defaultNoMoreStr = @"亲，没有更多数据啦~";
+```
+### 当前页面更改MJFooter没有更多数据时显示的文字内容
 ```objective-c
 self.tableView.zx_noMoreStr = @"亲，没有更多数据啦~";
 ```
@@ -109,4 +125,9 @@ self.tableView.zx_didUpdateScrollViewStatusBlock = ^(ZXDidUpdateScrollViewStatus
 ```objective-c
 //第一页的时候自动隐藏MJFooter(MJRefreshAutoNormalFooter情况下生效)
 self.tableView.zx_autoHideMJFooterInGroup = YES;
+```
+### 手动刷新paging(等同于下拉刷新)
+```objective-c
+//第一页的时候自动隐藏MJFooter(MJRefreshAutoNormalFooter情况下生效)
+[self.tableView zx_reloadPaging];
 ```
