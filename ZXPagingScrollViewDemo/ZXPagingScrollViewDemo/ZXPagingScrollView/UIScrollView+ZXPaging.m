@@ -17,6 +17,7 @@ static NSString *zx_noMoreStrKey = @"zx_noMoreStrKey";
 static NSString *zx_disbaleAutoCallWhenAddingPagingKey = @"zx_disbaleAutoCallWhenAddingPagingKey";
 static NSString *zx_pageDatasKey = @"zx_pageDatasKey";
 static NSString *zx_lastPageDatasKey = @"zx_lastPageDatasKey";
+static NSString *zx_lastAddedPageDatasKey = @"zx_lastAddedPageDatas";
 static NSString *zx_lastPageNoKey = @"zx_lastPageNoKey";
 static NSString *zx_isMJHeaderRefKey = @"zx_isMJHeaderRefKey";
 static NSString *zx_mjHeaderRefreshingBlockKey = @"zx_mjHeaderRefreshingBlockKey";
@@ -28,6 +29,12 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
  上一次加载的数据
  */
 @property(strong, nonatomic)NSMutableArray *zx_lastPageDatas;
+
+/**
+ 上一次添加的数据
+ */
+@property(strong, nonatomic)NSMutableArray *zx_lastAddedPageDatas;
+
 /**
  上一次的pageNo
  */
@@ -128,7 +135,7 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
             if(success){
                 long loc = self.zx_pageNo - (defaultPageNo == -1 ? 0 : defaultPageNo);
                 long count = resultArray.count;
-                if(self.zx_pageDatas.count && loc + count <= self.zx_pageDatas.count){
+                if(count && self.zx_pageDatas.count && loc + count <= self.zx_pageDatas.count){
                     [self.zx_pageDatas replaceObjectsInRange:NSMakeRange((self.zx_pageNo - (defaultPageNo == -1 ? 0 : defaultPageNo)) * self.zx_pageCount, resultArray.count) withObjectsFromArray:resultArray];
                 }
             }
@@ -139,6 +146,9 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
             }
             
         }
+    }
+    if(success){
+        [self setValue:resultArray forKey:@"zx_lastAddedPageDatas"];
     }
     [self updateScrollViewStatus:success];
     [self zx_endMJRef];
@@ -240,7 +250,7 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
             didUpdateScrollViewStatus = ZXDidUpdateScrollViewStatusNoMoreData;
         }else{
             self.mj_footer.hidden = NO;
-            if(self.zx_pageDatas.count % self.zx_pageCount || (self.zx_lastPageDatas && self.zx_lastPageDatas.count == self.zx_pageDatas.count  && self.zx_lastPageDatas.count != self.zx_pageCount)){
+            if(!self.zx_lastAddedPageDatas.count || self.zx_pageDatas.count % self.zx_pageCount || (self.zx_lastPageDatas && self.zx_lastPageDatas.count == self.zx_pageDatas.count  && self.zx_lastPageDatas.count != self.zx_pageCount)){
                 [self judgeHideMjFooterView];
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     self.mj_footer.state = MJRefreshStateNoMoreData;
@@ -397,6 +407,14 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
 
 - (NSMutableArray *)zx_lastPageDatas{
     return objc_getAssociatedObject(self, &zx_lastPageDatasKey);
+}
+
+- (void)setZx_lastAddedPageDatas:(NSMutableArray *)zx_lastAddedPageDatas{
+    objc_setAssociatedObject(self, &zx_lastAddedPageDatasKey, zx_lastAddedPageDatas, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (NSMutableArray *)zx_lastAddedPageDatas{
+    return objc_getAssociatedObject(self, &zx_lastAddedPageDatasKey);
 }
 
 - (void)setZx_isMJHeaderRef:(BOOL)zx_isMJHeaderRef{
