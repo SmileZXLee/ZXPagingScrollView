@@ -129,7 +129,7 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
                 long loc = self.zx_pageNo - (defaultPageNo == -1 ? 0 : defaultPageNo);
                 long count = resultArray.count;
                 if(self.zx_pageDatas.count && loc + count <= self.zx_pageDatas.count){
-                    [self.zx_pageDatas replaceObjectsInRange:NSMakeRange(self.zx_pageNo - (defaultPageNo == -1 ? 0 : defaultPageNo), resultArray.count) withObjectsFromArray:resultArray];
+                    [self.zx_pageDatas replaceObjectsInRange:NSMakeRange((self.zx_pageNo - (defaultPageNo == -1 ? 0 : defaultPageNo)) * self.zx_pageCount, resultArray.count) withObjectsFromArray:resultArray];
                 }
             }
         }else{
@@ -242,7 +242,6 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
             self.mj_footer.hidden = NO;
             if(self.zx_pageDatas.count % self.zx_pageCount || (self.zx_lastPageDatas && self.zx_lastPageDatas.count == self.zx_pageDatas.count  && self.zx_lastPageDatas.count != self.zx_pageCount)){
                 [self judgeHideMjFooterView];
-                NSLog(@"self.zx_lastPageDatas--%@",self.zx_lastPageDatas);
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     self.mj_footer.state = MJRefreshStateNoMoreData;
                     if([self.mj_footer
