@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
 s.name         = 'ZXPagingScrollView'
-s.version      = '1.0.4'
+s.version      = '1.0.5'
 s.summary      = '【基于MJRefresh】，两行代码完成tableView与collectionView分页加载全部效果'
 s.homepage     = 'https://github.com/SmileZXLee/ZXPagingScrollView'
 s.license      = 'MIT'
