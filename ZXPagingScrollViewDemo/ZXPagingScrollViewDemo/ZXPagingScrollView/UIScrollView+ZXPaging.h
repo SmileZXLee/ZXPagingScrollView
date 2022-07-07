@@ -7,7 +7,6 @@
 //  https://github.com/SmileZXLee/ZXPagingScrollView
 
 #import <UIKit/UIKit.h>
-#import "MJRefresh.h"
 #define ZXPagingWeakSelf(obj) autoreleasepool{} __weak typeof(obj) o##Weak = obj;
 #define ZXPagingStrongSelf(obj) autoreleasepool{} __strong typeof(obj) obj = o##Weak;
 NS_ASSUME_NONNULL_BEGIN

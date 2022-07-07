@@ -7,6 +7,7 @@
 //  https://github.com/SmileZXLee/ZXPagingScrollView
 
 #import "UIScrollView+ZXPaging.h"
+#import "MJRefresh.h"
 #import <objc/runtime.h>
 static int defaultPageNo = -1;
 static int defaultPageCount = -1;
