@@ -63,6 +63,24 @@ static NSString *zx_autoHideMJFooterInGroupKey = @"zx_autoHideMJFooterInGroupKey
     self.mj_footer.hidden = YES;
 }
 
+#pragma mark 添加默认的ZXPaging(通过block方式)
+- (void)zx_addDefaultPagingWithBlock:(void (^)(void))callback pagingDatas:(NSMutableArray *)pagingDatas{
+    if(defaultNoMoreStr){
+        self.zx_noMoreStr = defaultNoMoreStr;
+    }
+    self.zx_pageDatas = pagingDatas;
+    if(!self.zx_disbaleAutoCallWhenAddingPaging){
+        !callback ? : callback();
+    }
+    [self addDefaultMJHeader:^{
+        !callback ? : callback();
+    }];
+    [self addDefaultMJFooter:^{
+        !callback ? : callback();
+    }];
+    self.mj_footer.hidden = YES;
+}
+
 #pragma mark 添加默认的ZXPaging
 - (void)zx_addDefaultPagingWithSel:(SEL)sel pagingDatas:(NSMutableArray *)pagingDatas{
     self.zx_pageDatas = pagingDatas;

@@ -12,6 +12,7 @@
 #import "ZXCVGetProName.h"
 @interface ZXCollectionView()<UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout>
 @property(nonatomic, strong)NSMutableArray *registedArr;
+@property(nonatomic, strong)NSMutableDictionary *headersCahceDic;
 @end
 @implementation ZXCollectionView
 #pragma mark - Perference

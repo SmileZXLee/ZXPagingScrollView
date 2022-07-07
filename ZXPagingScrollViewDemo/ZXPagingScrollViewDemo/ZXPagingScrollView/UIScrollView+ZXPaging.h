@@ -121,6 +121,14 @@ typedef void(^zx_mjFooterBlock) (void);
 - (void)zx_addDefaultPagingWithSel:(SEL)sel pagingDatas:(NSMutableArray *)pagingDatas;
 
 /**
+ 添加默认的ZXPaging(通过block的方式)
+ (默认MJHeader为MJRefreshNormalHeader，MJFooter为MJRefreshBackNormalFooter)
+
+ @param callback 下拉刷新或上拉加载更多调用的回调
+ */
+- (void)zx_addDefaultPagingWithBlock:(void (^)(void))callback pagingDatas:(NSMutableArray *)pagingDatas;
+
+/**
  添加自定义的ZXPaging(当自定义MJHeader或MJFooter时使用)
 
  @param target 下拉刷新或上拉加载更多调用方法的target
